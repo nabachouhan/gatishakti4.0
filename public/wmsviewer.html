@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>WMS Viewer</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@7.3.0/ol.css" />
+  <style>html, body, #map { height: 100%; margin: 0; }</style>
+</head>
+<body>
+<div id="map"></div>
+
+<script type="module">
+import Map from 'https://cdn.jsdelivr.net/npm/ol@7.3.0/Map.js';
+import View from 'https://cdn.jsdelivr.net/npm/ol@7.3.0/View.js';
+import TileLayer from 'https://cdn.jsdelivr.net/npm/ol@7.3.0/layer/Tile.js';
+import OSM from 'https://cdn.jsdelivr.net/npm/ol@7.3.0/source/OSM.js';
+import TileWMS from 'https://cdn.jsdelivr.net/npm/ol@7.3.0/source/TileWMS.js';
+
+const params = new URLSearchParams(window.location.search);
+const workspace = params.get('workspace');
+const layer = params.get('layer');
+
+const wmsLayer = new TileLayer({
+  source: new TileWMS({
+    url: 'http://localhost:8080/geoserver/' + workspace + '/wms',
+    params: {
+      'LAYERS': `${workspace}:${layer}`,
+      'TILED': true
+    },
+    serverType: 'geoserver',
+    crossOrigin: 'anonymous'
+  })
+});
+
+const map = new Map({
+  target: 'map',
+  layers: [
+    new TileLayer({ source: new OSM() }),
+    wmsLayer
+  ],
+  view: new View({
+    center: [9310000, 2700000], // Change this as needed
+    zoom: 6
+  })
+});
+
+// GetFeatureInfo on click
+map.on('singleclick', function (evt) {
+  const view = map.getView();
+  const viewResolution = view.getResolution();
+
+  const url = wmsLayer.getSource().getFeatureInfoUrl(
+    evt.coordinate,
+    viewResolution,
+    'EPSG:3857',
+    { 'INFO_FORMAT': 'application/json' }
+  );
+
+  if (url) {
+    fetch(url)
+      .then(r => r.json())
+      .then(data => {
+        if (data.features.length > 0) {
+          alert(JSON.stringify(data.features[0].properties, null, 2));
+        } else {
+          alert('No feature info found');
+        }
+      });
+  }
+});
+</script>
+</body>
+</html>
