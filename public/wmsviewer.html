@@ -16,7 +16,7 @@
       margin: 0;
     }
     #map {
-      height: calc(100vh - 60px); /* Full height minus navbar */
+      height: calc(100vh - 120px); /* Full height minus navbar */
       border: 1px solid #dee2e6;
     }
   </style>
@@ -24,11 +24,31 @@
 <body>
 
   <!-- Bootstrap Navbar -->
-  <nav class="navbar navbar-dark bg-primary mb-2">
-    <div class="container-fluid">
-      <span class="navbar-brand mb-0 h1">WMS Viewer</span>
+<header class="bg-primary text-white py-4 shadow-sm mb-4">
+  <div class="container">
+    <div class="row align-items-center justify-content-between">
+      
+      <!-- Title -->
+      <div class="col-12 col-md-auto text-center text-md-start mb-3 mb-md-0">
+        <h1 class="h4 text-uppercase mb-0">Assam State Space Application Centre</h1>
+      </div>
+
+      <!-- Layer Info -->
+      <div class="col-12 col-md-auto text-center mb-3 mb-md-0">
+        <div class="d-inline-block bg-light text-dark px-3 py-2 rounded">
+          <strong>Layer Name:</strong> Land Use Map
+        </div>
+      </div>
+
+      <!-- WMS Viewer Label -->
+      <div class="col-12 col-md-auto text-center text-md-end">
+        <span class="badge bg-success fs-5 px-3 py-2">WMS Viewer</span>
+      </div>
+
     </div>
-  </nav>
+  </div>
+</header>
+
 
   <div class="container-fluid">
     <div id="map" class="rounded shadow-sm"></div>

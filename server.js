@@ -138,10 +138,43 @@ app.get('/api/:department', authenticateJWT, async (req, res) => {
 app.get('/api/:department/:layer', authenticateJWT, async (req, res) => {
   const { department, layer } = req.params;
   try {
-    const result = await pool.query(`
-      SELECT *, ST_AsGeoJSON(geom)::json AS geometry 
-      FROM "${layer}"
-    `);
+    // const result = await pool.query(`
+    //   SELECT *, ST_AsGeoJSON(geom)::json AS geometry 
+    //   FROM "${layer}"
+    // `);
+
+    // Check if 'geom' column exists in the table
+const geomCheck = await pool.query(`
+  SELECT column_name
+  FROM information_schema.columns
+  WHERE table_name = $1 AND column_name = 'geom'
+`, [layer]);
+
+let query;
+if (geomCheck.rows.length > 0) {
+  // 'geom' column exists
+  console.log("column exists");
+  
+  query = `
+    SELECT *, ST_AsGeoJSON(geom)::json AS geometry
+    FROM "${layer}"
+  `;
+} else {
+    console.log("Fallback: use latitude and longitude");
+
+  // Fallback: use latitude and longitude
+  query = `
+    SELECT *, 
+      json_build_object(
+        'type', 'Point',
+        'coordinates', json_build_array(longitude::float, latitude::float)
+      ) AS geometry
+    FROM "${layer}"
+  `;
+}
+
+const result = await pool.query(query);
+
 
     const features = result.rows.map(row => {
       const { geometry, geom, ...props } = row;
@@ -296,26 +329,36 @@ app.post('/replace', authenticateJWT, upload.single('file'), async (req, res) =>
 
     // Extract uploaded zip
     const zipPath = req.file.path;
+    console.log(zipPath);
+    
     const unzipPath = path.join('uploads', filename + '_replace');
     new AdmZip(zipPath).extractAllTo(unzipPath, true);
+    console.log(unzipPath);
 
     const shpFile = fs.readdirSync(unzipPath).find(f => f.endsWith('.shp'));
     if (!shpFile) throw new Error('No .shp file found');
 
     const shpPath = path.join(unzipPath, shpFile);
+    console.log(shpPath);
+    
 
     // Drop + recreate table
 const dropCmd = `psql -U ${process.env.db_user} -d ${process.env.db_name} -c "DROP TABLE IF EXISTS ${filename} CASCADE;"`;
 const importCmd = `shp2pgsql -I -s ${srid} "${shpPath}" ${filename} | psql -U ${process.env.db_user} -d ${process.env.db_name}`;
 
 
+
 exec(dropCmd, { env: { ...process.env, PGPASSWORD: process.env.db_pw } }, (dropErr, dropStdout, dropStderr) => {
   if (dropErr) {
+            cleanUp(zipPath, unzipPath);
+
     console.error('DROP error:', dropStderr);
     return res.status(500).json({ message: 'Failed to drop existing table' });
   }
 
   exec(importCmd, { env: { ...process.env, PGPASSWORD: process.env.db_pw } }, async (importErr, importStdout, importStderr) => {
+            cleanUp(zipPath, unzipPath);
+
     if (importErr || importStderr.toLowerCase().includes('error')) {
       console.error('Import error:', importStderr || importErr);
       return res.status(500).json({ message: 'Failed to import new shapefile' });
@@ -333,6 +376,18 @@ exec(dropCmd, { env: { ...process.env, PGPASSWORD: process.env.db_pw } }, (dropE
     client.release();
   }
 });
+
+// 🔄 Cleanup helper
+function cleanUp(zipPath, unzipPath) {
+  try {
+    if (fs.existsSync(zipPath)) fs.unlinkSync(zipPath); // Delete zip file
+    if (fs.existsSync(unzipPath)) fs.rmSync(unzipPath, { recursive: true, force: true }); // Delete extracted folder
+    console.log('Cleanup successful');
+  } catch (err) {
+    console.error('Cleanup failed:', err);
+  }
+}
+
 
 // Delete a layer completely
 app.post('/delete/:department/:layer', async (req, res) => {
