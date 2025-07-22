@@ -12,13 +12,18 @@ import bcrypt from 'bcrypt';
 import './src/db/schema.js';
 import AdmZip from 'adm-zip';
 import axios from 'axios';
+import cookieParser from 'cookie-parser';
+
 dotenv.config();
 const app = express();
+
+app.use(cookieParser());
+
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-app.use(express.static(path.join(__dirname, 'public')));
+// app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json());
 
 
@@ -55,6 +60,19 @@ function authenticateJWT(req, res, next) {
   });
 }
 
+// 🟢 JWT Middleware using Cookie
+function authenticateJWTFromCookie(req, res, next) {
+  const token = req.cookies?.token; // Read from 'token' cookie
+
+  if (!token) return res.sendStatus(401); // Unauthorized
+
+  jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+    if (err) return res.sendStatus(403); // Forbidden
+    req.user = user;
+    next();
+  });
+}
+
 // 🔐 Login route
 app.post('/', async(req, res) => {
   const { username, password } = req.body;
@@ -71,6 +89,15 @@ app.post('/', async(req, res) => {
       }
   
     const token = jwt.sign({ username: username, role: role }, process.env.JWT_SECRET, { expiresIn: '2h' });
+
+     // cookie for automatic use
+    res.cookie('token', token, {
+      httpOnly: true,     // not accessible via JavaScript
+      secure: false,      // set to true in production with HTTPS
+      sameSite: 'Strict',
+      maxAge: 2 * 60 * 60 * 1000 // 2 hours
+    });
+     // send token
     res.json({ token });
   } catch (error) {
     res.status(500).json({"message":"server Error"})
@@ -151,7 +178,7 @@ app.get('/api/:department/:layer/metainfo', authenticateJWT, async (req, res) =>
 
 
 // ✏️ Update full metadata (no allowedFields filter; match only by layer_name)
-app.put('/api/:department/:layer/metainfo', authenticateJWT, async (req, res) => {
+app.post('/api/:department/:layer/metainfo', authenticateJWT, async (req, res) => {
   const { layer } = req.params;
   const metadata = req.body;
 
@@ -181,65 +208,6 @@ app.put('/api/:department/:layer/metainfo', authenticateJWT, async (req, res) =>
 });
 
 
-
-
-
-// ⬆️  update layer
-app.put('/:department/:layer/data', authenticateJWT, upload.single('file'), async (req, res) => {
-  const { department, layer } = req.params;
-  const file = req.file;
-  const schema = department.toLowerCase();
-  const table = layer.toLowerCase();
-  const uploadDir = `uploads/${Date.now()}`;
-
-  try {
-    await fs.promises.mkdir(uploadDir, { recursive: true });
-
-    await fs.createReadStream(file.path)
-      .pipe(unzipper.Extract({ path: uploadDir }))
-      .promise();
-
-    const shpFile = fs.readdirSync(uploadDir).find(f => f.endsWith('.shp'));
-    if (!shpFile) throw new Error('No .shp file found');
-
-    const shpPath = path.join(uploadDir, shpFile);
-    const sqlFile = path.join(uploadDir, `${table}.sql`);
-
-    // Drop & Create using shp2pgsql
-    const shp2pgsqlCmd = `shp2pgsql -s 4326 -I -W "UTF-8" -g geom -d "${shpPath}" "${schema}.${table}" > "${sqlFile}"`;
-    await execPromise(shp2pgsqlCmd);
-
-    const psqlCmd = `psql -U ${process.env.DB_USER} -d ${process.env.DB_NAME} -f "${sqlFile}"`;
-    await execPromise(psqlCmd);
-
-    // Get geometry info
-    const metaRes = await pooluser.query(`
-      SELECT srid, type FROM geometry_columns
-      WHERE f_table_schema = $1 AND f_table_name = $2
-    `, [schema, table]);
-
-    if (metaRes.rowCount === 0) throw new Error('Geometry not found');
-
-    const { srid, type: geometry_type } = metaRes.rows[0];
-
-    // Upsert metadata
-    await pooluser.query(`
-      INSERT INTO layer_metadata (department, layer_name, srid, geometry_type)
-      VALUES ($1, $2, $3, $4)
-      ON CONFLICT (department, layer_name)
-      DO UPDATE SET srid = $3, geometry_type = $4
-    `, [department, layer, srid, geometry_type]);
-
-    res.json({ message: 'Layer updated successfully' });
-
-  } catch (err) {
-    console.error('Upload failed:', err);
-    res.status(500).json({ error: err.message || 'Upload failed' });
-  } finally {
-    fs.promises.rm(uploadDir, { recursive: true, force: true }).catch(() => {});
-    fs.promises.unlink(file.path).catch(() => {});
-  }
-});
 
 // ⬆️ Upload shapefile ZIP
 app.post('/upload', authenticateJWT, upload.single('file'), async (req, res) => {
@@ -367,7 +335,7 @@ exec(dropCmd, { env: { ...process.env, PGPASSWORD: process.env.db_pw } }, (dropE
 });
 
 // Delete a layer completely
-app.delete('/delete/:department/:layer', async (req, res) => {
+app.post('/delete/:department/:layer', async (req, res) => {
   const { department, layer } = req.params;
   const client = await pooluser.connect();
   const dataclient = await pool.connect();
@@ -403,7 +371,7 @@ app.delete('/delete/:department/:layer', async (req, res) => {
 
 
 // wfs
-app.get('/preview/:department/:layer/wfs', async (req, res) => {
+app.get('/api/:department/:layer/wfs', authenticateJWT, async (req, res) => {
   const { department, layer } = req.params;
 
   const geoserverURL = process.env.geoserverURL;
@@ -427,14 +395,14 @@ app.get('/preview/:department/:layer/wfs', async (req, res) => {
 
 // wms
 
-app.get('/viewer/:department/:layer', (req, res) => {
+app.get('/viewer/:department/:layer', authenticateJWTFromCookie, (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'wmsviewer.html'));
 });
 
 
 
 // WMS Proxy Route
-app.get('/wms', async (req, res) => {
+app.get('/wms', authenticateJWT, async (req, res) => {
   const { workspace } = req.query;
 console.log("wms");
 
@@ -477,18 +445,20 @@ app.get('/verify-token', (req, res) => {
   });
 });
 
-function execPromise(cmd) {
-  return new Promise((resolve, reject) => {
-    exec(cmd, { env: process.env }, (err, stdout, stderr) => {
-      if (err) return reject(stderr);
-      resolve(stdout);
-    });
-  });
-}
 
 app.get('/', (req, res) => {
-  res.redirect('/login.html');
+  res.sendFile(path.join(__dirname, 'public', 'login.html'));
 });
+
+app.get('/home.html', authenticateJWTFromCookie, (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'home.html'));
+});
+
+app.get('/department.html', authenticateJWTFromCookie, (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'department.html'));
+});
+
+
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`✅ Server running at http://localhost:${PORT}`));
