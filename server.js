@@ -11,7 +11,7 @@ import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
 import './src/db/schema.js';
 import AdmZip from 'adm-zip';
-
+import axios from 'axios';
 dotenv.config();
 const app = express();
 
@@ -431,6 +431,39 @@ app.get('/viewer/:department/:layer', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'wmsviewer.html'));
 });
 
+
+
+// WMS Proxy Route
+app.get('/wms', async (req, res) => {
+  const { workspace } = req.query;
+console.log("wms");
+
+  if (!workspace) {
+    return res.status(400).json({ error: 'Missing "workspace" parameter' });
+  }
+
+  // Remove `workspace` from query string and forward the rest to GeoServer
+  const originalQuery = req._parsedUrl.query;
+  const queryParams = originalQuery.replace(`workspace=${workspace}&`, '');
+  const geoServerUrl = `http://localhost:8080/geoserver/${workspace}/wms?${queryParams}`;
+console.log(geoServerUrl);
+
+  try {
+    const response = await axios.get(geoServerUrl, {
+      responseType: 'arraybuffer', // Important for image/tile responses
+    });
+
+    // Pass headers like content-type and others from GeoServer to client
+    Object.entries(response.headers).forEach(([key, value]) => {
+      res.setHeader(key, value);
+    });
+
+    res.status(response.status).send(response.data);
+  } catch (err) {
+    console.error('WMS Proxy Error:', err.message);
+    res.status(500).json({ error: 'Failed to fetch WMS from GeoServer' });
+  }
+});
 
 app.get('/verify-token', (req, res) => {
   const authHeader = req.headers['authorization'];

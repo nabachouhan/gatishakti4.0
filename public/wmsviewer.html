@@ -19,26 +19,65 @@ const params = new URLSearchParams(window.location.search);
 const workspace = params.get('workspace');
 const layer = params.get('layer');
 
-const wmsLayer = new TileLayer({
-  source: new TileWMS({
-    url: 'http://localhost:8080/geoserver/' + workspace + '/wms',
-    params: {
-      'LAYERS': `${workspace}:${layer}`,
-      'TILED': true
-    },
-    serverType: 'geoserver',
-    crossOrigin: 'anonymous'
-  })
+
+const token = localStorage.getItem('token');
+console.log(`/api/wms?workspace=${workspace}&LAYERS=${workspace}:${layer}&TILED=true`);
+
+
+const boundaryWmsSource = new TileWMS({
+  url: `/wms?workspace=${workspace}`,
+  params: {
+    'LAYERS': `${workspace}:assam`,
+    'TILED': true
+  },
+  serverType: 'geoserver',
+  tileLoadFunction: (tile, src) => {
+    fetch(src, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    })
+      .then(res => res.blob())
+      .then(blob => {
+        tile.getImage().src = URL.createObjectURL(blob);
+      });
+  }
 });
+const boundaryWmsLayer = new TileLayer({ source: boundaryWmsSource });
+
+
+// ----
+const wmsSource = new TileWMS({
+  url: `/wms?workspace=${workspace}`,
+  params: {
+    'LAYERS': `${workspace}:${layer}`,
+    'TILED': true
+  },
+  serverType: 'geoserver',
+  tileLoadFunction: (tile, src) => {
+    fetch(src, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    })
+      .then(res => res.blob())
+      .then(blob => {
+        tile.getImage().src = URL.createObjectURL(blob);
+      });
+  }
+});
+
+const wmsLayer = new TileLayer({ source: wmsSource });
 
 const map = new Map({
   target: 'map',
   layers: [
     new TileLayer({ source: new OSM() }),
+    boundaryWmsLayer,
     wmsLayer
   ],
   view: new View({
-    center: [9310000, 2700000], // Change this as needed
+    center: [9310000, 2700000],
     zoom: 6
   })
 });
