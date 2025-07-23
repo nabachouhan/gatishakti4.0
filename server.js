@@ -31,22 +31,22 @@ app.use(express.json());
 // Configure multer
 
 const storage = multer.diskStorage({
-    destination: 'uploads/',
-    filename: (req, file, cb) => {
-        // Use the original filename (without any modifications)
-        cb(null, file.originalname);
-    }
+  destination: 'uploads/',
+  filename: (req, file, cb) => {
+    // Use the original filename (without any modifications)
+    cb(null, file.originalname);
+  }
 });
 const upload = multer({
-    storage,
-    dest: 'uploads/',
-    fileFilter: (req, file, cb) => {
-        if (file.mimetype === 'application/zip' || file.mimetype === 'application/x-zip-compressed') {
-            cb(null, true);
-        } else {
-            cb(new Error('Invalid file type. Only ZIP files are allowed.'));
-        }
+  storage,
+  dest: 'uploads/',
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype === 'application/zip' || file.mimetype === 'application/x-zip-compressed') {
+      cb(null, true);
+    } else {
+      cb(new Error('Invalid file type. Only ZIP files are allowed.'));
     }
+  }
 });
 
 // 🟢 JWT Middleware
@@ -74,33 +74,33 @@ function authenticateJWTFromCookie(req, res, next) {
 }
 
 // 🔐 Login route
-app.post('/', async(req, res) => {
+app.post('/', async (req, res) => {
   const { username, password } = req.body;
   // console.log(req.body);
   try {
     const result = await pooluser.query('SELECT * FROM credentials WHERE username = $1', [username]);
-      const client = result.rows[0];
-      // console.log(client);
-      const role = result.rows[0].role;
-      
-      if ( !client ||username!=client.username || !(await bcrypt.compare(password, client.password))) {
-        const data = { message: 'Invalid Credentials!!', title: "Oops?", icon: "warning", redirect:"/" };
-        return res.status(401).json(data);
-      }
-  
+    const client = result.rows[0];
+    // console.log(client);
+    const role = result.rows[0].role;
+
+    if (!client || username != client.username || !(await bcrypt.compare(password, client.password))) {
+      const data = { message: 'Invalid Credentials!!', title: "Oops?", icon: "warning", redirect: "/" };
+      return res.status(401).json(data);
+    }
+
     const token = jwt.sign({ username: username, role: role }, process.env.JWT_SECRET, { expiresIn: '2h' });
 
-     // cookie for automatic use
+    // cookie for automatic use
     res.cookie('token', token, {
       httpOnly: true,     // not accessible via JavaScript
-      secure: false,      // set to true in production with HTTPS
+      secure: true,      // set to true in production with HTTPS
       sameSite: 'Strict',
       maxAge: 2 * 60 * 60 * 1000 // 2 hours
     });
-     // send token
+    // send token
     res.json({ token });
   } catch (error) {
-    res.status(500).json({"message":"server Error"})
+    res.status(500).json({ "message": "server Error" })
   }
 
 });
@@ -108,23 +108,23 @@ app.post('/', async(req, res) => {
 
 // 📁 List departments
 app.get('/api', authenticateJWT, async (req, res) => {
-  
-try {
-const result = await pooluser.query(`
+
+  try {
+    const result = await pooluser.query(`
   SELECT department, COUNT(*) AS layer_count
   FROM layer_metadata
   GROUP BY department
   ORDER BY department ASC
 `);
-console.log(result.rows);
+    console.log(result.rows);
     // console.log(result.rows);
-res.status(200).json(result.rows.map(r => ({
-  department: r.department,
-  count: Number(r.layer_count)
-})));
-} catch (error) {
-      res.status(500).json({"message":"server Error"})
-}  
+    res.status(200).json(result.rows.map(r => ({
+      department: r.department,
+      count: Number(r.layer_count)
+    })));
+  } catch (error) {
+    res.status(500).json({ "message": "server Error" })
+  }
 });
 
 // 📂 List layers in a department
@@ -138,7 +138,7 @@ app.get('/api/:department', authenticateJWT, async (req, res) => {
     );
     res.status(200).json(result.rows);
   } catch (error) {
-      res.status(500).json({"message":"server Error"})
+    res.status(500).json({ "message": "server Error" })
   }
 });
 
@@ -148,26 +148,26 @@ app.get('/api/:department/:layer', authenticateJWT, async (req, res) => {
   try {
 
     // Check if 'geom' column exists in the table
-const geomCheck = await pool.query(`
+    const geomCheck = await pool.query(`
   SELECT column_name
   FROM information_schema.columns
   WHERE table_name = $1 AND column_name = 'geom'
 `, [layer]);
 
-let query;
-if (geomCheck.rows.length > 0) {
-  // 'geom' column exists
-  console.log("column exists");
-  
-  query = `
+    let query;
+    if (geomCheck.rows.length > 0) {
+      // 'geom' column exists
+      // console.log("column exists");
+
+      query = `
     SELECT *, ST_AsGeoJSON(geom)::json AS geometry
     FROM "${layer}"
   `;
-} else {
-    console.log("Fallback: use latitude and longitude");
+    } else {
+      // console.log("Fallback: use latitude and longitude");
 
-  // Fallback: use latitude and longitude
-  query = `
+      // Fallback: use latitude and longitude
+      query = `
     SELECT *, 
       json_build_object(
         'type', 'Point',
@@ -175,9 +175,9 @@ if (geomCheck.rows.length > 0) {
       ) AS geometry
     FROM "${layer}"
   `;
-}
+    }
 
-const result = await pool.query(query);
+    const result = await pool.query(query);
 
 
     const features = result.rows.map(row => {
@@ -207,7 +207,7 @@ app.get('/api/:department/:layer/metainfo', authenticateJWT, async (req, res) =>
     );
     if (result.rowCount === 0) return res.status(404).json({ error: 'Metadata not found' });
     res.json(result.rows[0]);
-    
+
   } catch (error) {
     res.status(500).json({ error: 'Failed to Get metadata' });
   }
@@ -220,17 +220,17 @@ app.post('/api/:department/:layer/metainfo', authenticateJWT, async (req, res) =
   const metadata = req.body;
 
   try {
-  const fields = Object.keys(metadata);
-  const values = fields.map(key => metadata[key]);
+    const fields = Object.keys(metadata);
+    const values = fields.map(key => metadata[key]);
 
-  if (fields.length === 0) {
-    return res.status(400).json({ error: 'No metadata fields provided.' });
-  }
+    if (fields.length === 0) {
+      return res.status(400).json({ error: 'No metadata fields provided.' });
+    }
 
-  // Build dynamic SET clause
-  const setClause = fields.map((field, i) => `${field} = $${i + 1}`).join(', ');
+    // Build dynamic SET clause
+    const setClause = fields.map((field, i) => `${field} = $${i + 1}`).join(', ');
 
-  const query = `
+    const query = `
     UPDATE layer_metadata 
     SET ${setClause} 
     WHERE layer_name = $${fields.length + 1}
@@ -248,35 +248,33 @@ app.post('/api/:department/:layer/metainfo', authenticateJWT, async (req, res) =
 
 // ⬆️ Upload shapefile ZIP
 app.post('/upload', authenticateJWT, upload.single('file'), async (req, res) => {
-  const { department,filename  } = req.body;
+  const { department, filename } = req.body;
   const db = 'geodatasets';
-const srid = 4326;
+  const srid = 4326;
 
-    const client = await pooluser.connect();
+  const client = await pooluser.connect();
 
-    // Unzip
-    const zipPath = req.file.path;
+  // Unzip
+  const zipPath = req.file.path;
 
-    const unzipPath = path.join('uploads', filename);
+  const unzipPath = path.join('uploads', filename);
   try {
     // Check if layer already exists
     const check = await client.query(`SELECT 1 FROM layer_metadata WHERE layer_name = $1`, [filename]);
     if (check.rowCount > 0) {
       return res.status(400).json({ message: 'Shapefile name already exists' });
     }
-        const basedir = 'uploads/'
-        const zip = new AdmZip(req.file.path);
-        const fullDirectoryPath = path.join(basedir, filename)
+    const basedir = 'uploads/'
+    const zip = new AdmZip(req.file.path);
+    const fullDirectoryPath = path.join(basedir, filename)
 
-                zip.extractAllTo(fullDirectoryPath, true);
+    zip.extractAllTo(fullDirectoryPath, true);
 
-        const tmpshppath0 = fullDirectoryPath + '\\' + req.file.originalname;
+    const tmpshppath0 = fullDirectoryPath + '\\' + req.file.originalname;
 
-        const tmpshppath = path.normalize(tmpshppath0);
-        // Extract the file name without the extension
-        const shapefilePath = tmpshppath.replace(".zip", ".shp");
-        // -------------
-
+    const tmpshppath = path.normalize(tmpshppath0);
+    // Extract the file name without the extension
+    const shapefilePath = tmpshppath.replace(".zip", ".shp");
 
     new AdmZip(zipPath).extractAllTo(unzipPath, true);
 
@@ -309,13 +307,13 @@ const srid = 4326;
         [department, filename]
       );
 
-    
+
 
       res.status(201).json({ message: 'Shapefile uploaded successfully' });
     });
   } catch (err) {
     cleanUp(zipPath, unzipPath);
-    console.error(err);
+    // console.error(err);
     res.status(500).json({ title: "Failed", message: err.message });
   } finally {
     client.release();
@@ -325,14 +323,14 @@ const srid = 4326;
 // ⬆️ rEPLACE shapefile ZIP
 app.post('/replace', authenticateJWT, upload.single('file'), async (req, res) => {
   // console.log("replce-------------------------");
-  
-  const {filename } = req.body;
+
+  const { filename } = req.body;
   // console.log(req.body);
-  
+
   const srid = 4326;
-    const zipPath = req.file.path;
-    const unzipPath = path.join('uploads', filename + '_replace');
-    const client = await pooluser.connect();
+  const zipPath = req.file.path;
+  const unzipPath = path.join('uploads', filename + '_replace');
+  const client = await pooluser.connect();
   try {
     const check = await client.query(`SELECT 1 FROM layer_metadata WHERE layer_name = $1`, [filename]);
     if (check.rowCount === 0) {
@@ -340,13 +338,11 @@ app.post('/replace', authenticateJWT, upload.single('file'), async (req, res) =>
     }
 
     // Extract uploaded zip
-    
-    console.log(zipPath);
-    
-    new AdmZip(zipPath).extractAllTo(unzipPath, true);
-    console.log(unzipPath);
 
-     const shpFile = fs.readdirSync(unzipPath).find(f => f.endsWith('.shp'));
+
+    new AdmZip(zipPath).extractAllTo(unzipPath, true);
+
+    const shpFile = fs.readdirSync(unzipPath).find(f => f.endsWith('.shp'));
     const shxFile = fs.readdirSync(unzipPath).find(f => f.endsWith('.shx'));
     const dbfFile = fs.readdirSync(unzipPath).find(f => f.endsWith('.dbf'));
     if (!shpFile) throw new Error('No .shp file found in zip');
@@ -355,39 +351,39 @@ app.post('/replace', authenticateJWT, upload.single('file'), async (req, res) =>
 
     const shpPath = path.join(unzipPath, shpFile);
     console.log(shpPath);
-    
+
 
     // Drop + recreate table
-const dropCmd = `psql -U ${process.env.db_user} -d ${process.env.db_name} -c "DROP TABLE IF EXISTS ${filename} CASCADE;"`;
-const importCmd = `shp2pgsql -I -s ${srid} "${shpPath}" ${filename} | psql -U ${process.env.db_user} -d ${process.env.db_name}`;
+    const dropCmd = `psql -U ${process.env.db_user} -d ${process.env.db_name} -c "DROP TABLE IF EXISTS ${filename} CASCADE;"`;
+    const importCmd = `shp2pgsql -I -s ${srid} "${shpPath}" ${filename} | psql -U ${process.env.db_user} -d ${process.env.db_name}`;
 
 
 
-exec(dropCmd, { env: { ...process.env, PGPASSWORD: process.env.db_pw } }, (dropErr, dropStdout, dropStderr) => {
-  if (dropErr) {
-            cleanUp(zipPath, unzipPath);
+    exec(dropCmd, { env: { ...process.env, PGPASSWORD: process.env.db_pw } }, (dropErr, dropStdout, dropStderr) => {
+      if (dropErr) {
+        cleanUp(zipPath, unzipPath);
 
-    console.error('DROP error:', dropStderr);
-    return res.status(500).json({ message: 'Failed to drop existing table' });
-  }
+        console.error('DROP error:', dropStderr);
+        return res.status(500).json({ message: 'Failed to drop existing table' });
+      }
 
-  exec(importCmd, { env: { ...process.env, PGPASSWORD: process.env.db_pw } }, async (importErr, importStdout, importStderr) => {
-            cleanUp(zipPath, unzipPath);
+      exec(importCmd, { env: { ...process.env, PGPASSWORD: process.env.db_pw } }, async (importErr, importStdout, importStderr) => {
+        cleanUp(zipPath, unzipPath);
 
-    if (importErr || importStderr.toLowerCase().includes('error')) {
-      console.error('Import error:', importStderr || importErr);
-      return res.status(500).json({ message: 'Failed to import new shapefile' });
-    }
+        if (importErr || importStderr.toLowerCase().includes('error')) {
+          console.error('Import error:', importStderr || importErr);
+          return res.status(500).json({ message: 'Failed to import new shapefile' });
+        }
 
-    res.status(200).json({ message: 'Layer replaced successfully' });
-  });
-});
+        res.status(200).json({ message: 'Layer replaced successfully' });
+      });
+    });
 
 
   } catch (err) {
     console.error(err);
     cleanUp(zipPath, unzipPath)
-    res.status(500).json({ title: "Failed",message: err.message, icon:'Danger' });
+    res.status(500).json({ title: "Failed", message: err.message, icon: 'Danger' });
   } finally {
     client.release();
   }
@@ -410,7 +406,7 @@ app.post('/delete/:department/:layer', async (req, res) => {
   const { department, layer } = req.params;
   const client = await pooluser.connect();
   const dataclient = await pool.connect();
-  
+
   try {
     // Check if layer exists in metadata
     const check = await client.query(`SELECT * FROM layer_metadata WHERE layer_name = $1`, [layer]);
@@ -433,7 +429,7 @@ app.post('/delete/:department/:layer', async (req, res) => {
     res.status(200).json({ message: `Layer "${layer}" deleted successfully.` });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ title: 'Failed', message: err.message  });
+    res.status(500).json({ title: 'Failed', message: err.message });
   } finally {
     client.release();
     dataclient.release();
@@ -446,15 +442,16 @@ app.get('/api/:department/:layer/wfs', authenticateJWT, async (req, res) => {
   const { department, layer } = req.params;
 
   const geoserverURL = process.env.geoserverURL;
-  const workspace = 'gatishakti'; // 🔁 optionally map department to workspace
+  const workspace = process.env.workspace; // 🔁 optionally map department to workspace
 
   const wfsURL = `${geoserverURL}/${workspace}/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=${workspace}:${layer}&outputFormat=application/json`;
 
   try {
     const geores = await fetch(wfsURL, {
-  headers: {
-    Authorization: 'Basic ' + Buffer.from('admin:geoserver').toString('base64')
-  }});
+      headers: {
+        Authorization: 'Basic ' + Buffer.from(`${process.env.geoserveruser}:${process.env.geoserverpassword}`).toString('base64')
+      }
+    });
     const data = await geores.json();
     res.setHeader('Content-Type', 'application/json');
     res.status(200).json(data);
@@ -469,22 +466,23 @@ app.get('/api/:department/:layer/kml', authenticateJWTFromCookie, async (req, re
   const { department, layer } = req.params;
 
   const geoserverURL = process.env.geoserverURL;
-  const workspace = 'gatishakti'; // 🔁 optionally map department to workspace
+  const workspace = process.env.workspace; // 🔁 optionally map department to workspace
 
   const wfsURL = `${geoserverURL}/${workspace}/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=${workspace}:${layer}&outputFormat=kml`;
 
   try {
     const geores = await fetch(wfsURL, {
-  headers: {
-    Authorization: 'Basic ' + Buffer.from('admin:geoserver').toString('base64')
-  }});
-     const kmlData = await geores.text(); // KML is XML-based
-      res.setHeader("Content-Type", "application/vnd.google-earth.kml+xml");
-      res.setHeader("Content-Disposition", "attachment; filename=layer-data.kml");
-      res.status(200).send(kmlData);
+      headers: {
+        Authorization: 'Basic ' + Buffer.from(`${process.env.geoserveruser}:${process.env.geoserverpassword}`).toString('base64')
+      }
+    });
+    const kmlData = await geores.text(); // KML is XML-based
+    res.setHeader("Content-Type", "application/vnd.google-earth.kml+xml");
+    res.setHeader("Content-Disposition", "attachment; filename=layer-data.kml");
+    res.status(200).send(kmlData);
   } catch (error) {
     console.error('WFS proxy error:', error);
-    res.status(500).json({ error: 'Failed to fetch WFS data from GeoServer' });
+    res.status(500).json({ error: 'Failed to fetch KML data from GeoServer' });
   }
 });
 
@@ -499,7 +497,6 @@ app.get('/viewer/:department/:layer', authenticateJWTFromCookie, (req, res) => {
 // WMS Proxy Route
 app.get('/wms', authenticateJWT, async (req, res) => {
   const { workspace } = req.query;
-console.log("wms");
 
   if (!workspace) {
     return res.status(400).json({ error: 'Missing "workspace" parameter' });
@@ -509,7 +506,7 @@ console.log("wms");
   const originalQuery = req._parsedUrl.query;
   const queryParams = originalQuery.replace(`workspace=${workspace}&`, '');
   const geoServerUrl = `http://localhost:8080/geoserver/${workspace}/wms?${queryParams}`;
-console.log(geoServerUrl);
+  // console.log(geoServerUrl);
 
   try {
     const response = await axios.get(geoServerUrl, {
@@ -531,7 +528,7 @@ console.log(geoServerUrl);
 app.get('/verify-token', (req, res) => {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
-  
+
   if (!token) return res.sendStatus(401);
 
   jwt.verify(token, process.env.JWT_SECRET, (err, user) => {

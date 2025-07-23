@@ -1,251 +1,258 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <title>Department Layers</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
-  
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+
   <style>
     .layer-item {
       transition: transform 0.2s;
     }
+
     .layer-item:hover {
       transform: translateY(-2px);
       background-color: aquamarine;
     }
+
     .btn-icon {
       margin-left: 5px;
     }
   </style>
 </head>
+
 <body class="bg-light">
- <header class="bg-primary text-white py-3 mb-4 shadow-sm">
+  <header class="bg-primary text-white py-3 mb-4 shadow-sm">
+    <div class="container">
+      <h1 class="h4 mb-0 text-center text-uppercase">Assam State Space Application Centre</h1>
+    </div>
+  </header>
+
   <div class="container">
-    <h1 class="h4 mb-0 text-center text-uppercase">Assam State Space Application Centre</h1>
-  </div>
-</header>
+    <div class="d-flex justify-content-between mb-3">
 
-<div class="container">
-   <div class="d-flex justify-content-between mb-3">
+      <div class="">
+        <button id="logoutBtn" class="btn btn-secondary" onclick="history.back()">Back</button>
+      </div>
+      <div class="">
+        <button id="logoutBtn" class="btn btn-danger">Logout</button>
+      </div>
+    </div>
 
-  <div class="">
-    <button id="logoutBtn" class="btn btn-secondary" onclick="history.back()">Back</button>
-  </div>
-  <div class="">
-    <button id="logoutBtn" class="btn btn-danger">Logout</button>
-  </div>
-</div>
-
-  <div class="card shadow-sm">
-    <div class="card-body">
-      <h2 id="deptTitle" class="mb-4 text-center">Department</h2>
-      <ul id="layerList" class="list-group list-group-flush"></ul>
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h2 id="deptTitle" class="mb-4 text-center">Department</h2>
+        <ul id="layerList" class="list-group list-group-flush"></ul>
+      </div>
     </div>
   </div>
-</div>
 
 
- 
+
 
   <!-- Edit Metadata Modal -->
-<div class="modal fade" id="editPopup" tabindex="-1" aria-labelledby="editPopupLabel" aria-hidden="true">
-  <div class="modal-dialog modal-lg">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="editPopupLabel">Edit Metadata</h5>
-        <button type="button" class="btn-close" onclick="closePopup()" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
+  <div class="modal fade" id="editPopup" tabindex="-1" aria-labelledby="editPopupLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="editPopupLabel">Edit Metadata</h5>
+          <button type="button" class="btn-close" onclick="closePopup()" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
 
-        <!-- Basic Identification -->
-        <div class="mb-3">
-          <label for="editTitle" class="form-label">Title</label>
-          <input type="text" class="form-control" id="editTitle">
-        </div>
-        <div class="mb-3">
-          <label for="editDesc" class="form-label">Description</label>
-          <textarea class="form-control" id="editDesc" rows="3"></textarea>
-        </div>
-        <div class="mb-3">
-          <label for="editAbstract" class="form-label">Abstract</label>
-          <textarea class="form-control" id="editAbstract" rows="2"></textarea>
-        </div>
-        <div class="mb-3">
-          <label for="editPurpose" class="form-label">Purpose</label>
-          <input type="text" class="form-control" id="editPurpose">
-        </div>
-        <div class="mb-3">
-          <label for="editTopicCategory" class="form-label">Topic Category</label>
-          <input type="text" class="form-control" id="editTopicCategory">
+          <!-- Basic Identification -->
+          <div class="mb-3">
+            <label for="editTitle" class="form-label">Title</label>
+            <input type="text" class="form-control" id="editTitle">
+          </div>
+          <div class="mb-3">
+            <label for="editDesc" class="form-label">Description</label>
+            <textarea class="form-control" id="editDesc" rows="3"></textarea>
+          </div>
+          <div class="mb-3">
+            <label for="editAbstract" class="form-label">Abstract</label>
+            <textarea class="form-control" id="editAbstract" rows="2"></textarea>
+          </div>
+          <div class="mb-3">
+            <label for="editPurpose" class="form-label">Purpose</label>
+            <input type="text" class="form-control" id="editPurpose">
+          </div>
+          <div class="mb-3">
+            <label for="editTopicCategory" class="form-label">Topic Category</label>
+            <input type="text" class="form-control" id="editTopicCategory">
+          </div>
+
+          <!-- Contact Info -->
+          <div class="mb-3">
+            <label for="editContactName" class="form-label">Contact Name</label>
+            <input type="text" class="form-control" id="editContactName">
+          </div>
+          <div class="mb-3">
+            <label for="editContactOrg" class="form-label">Contact Organization</label>
+            <input type="text" class="form-control" id="editContactOrg" value="ASSAC">
+          </div>
+          <div class="mb-3">
+            <label for="editContactEmail" class="form-label">Contact Email</label>
+            <input type="email" class="form-control" id="editContactEmail">
+          </div>
+          <div class="mb-3">
+            <label for="editContactPhone" class="form-label">Contact Phone</label>
+            <input type="text" class="form-control" id="editContactPhone">
+          </div>
+
+          <!-- Spatial Info -->
+          <label for="editGeometryType" class="form-label">Geometry Type</label>
+          <select class="form-control" id="editGeometryType">
+            <option value="">Select Geometry</option>
+            <option value="Point">Point</option>
+            <option value="MultiPoint">MultiPoint</option>
+            <option value="LineString">LineString</option>
+            <option value="MultiLineString">MultiLineString</option>
+            <option value="Polygon">Polygon</option>
+            <option value="MultiPolygon">MultiPolygon</option>
+          </select>
+
+          <div class="mb-3">
+            <label for="editSRID" class="form-label">SRID</label>
+            <input type="number" class="form-control" id="editSRID" value="4326">
+          </div>
+          <div class="mb-3">
+            <label for="editScale" class="form-label">Scale Denominator</label>
+            <input type="text" class="form-control" id="editScale">
+          </div>
+
+          <!-- Accuracy & Lineage -->
+          <div class="mb-3">
+            <label for="editPosAccuracy" class="form-label">Positional Accuracy</label>
+            <input type="text" class="form-control" id="editPosAccuracy">
+          </div>
+          <div class="mb-3">
+            <label for="editAttrAccuracy" class="form-label">Attribute Accuracy</label>
+            <input type="text" class="form-control" id="editAttrAccuracy">
+          </div>
+          <div class="mb-3">
+            <label for="editLineage" class="form-label">Lineage</label>
+            <textarea class="form-control" id="editLineage" rows="2"></textarea>
+          </div>
+
+          <!-- Citation Info -->
+          <div class="mb-3">
+            <label for="editCitationTitle" class="form-label">Citation Title</label>
+            <input type="text" class="form-control" id="editCitationTitle">
+          </div>
+          <div class="mb-3">
+            <label for="editCitationDate" class="form-label">Citation Date <span class="text-danger">*</span></label>
+            <input type="date" class="form-control" id="editCitationDate" required>
+          </div>
+          <div class="mb-3">
+            <label for="editPublisher" class="form-label">Publisher</label>
+            <input type="text" class="form-control" id="editPublisher">
+          </div>
         </div>
 
-        <!-- Contact Info -->
-        <div class="mb-3">
-          <label for="editContactName" class="form-label">Contact Name</label>
-          <input type="text" class="form-control" id="editContactName">
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closePopup()">Cancel</button>
+          <button type="button" class="btn btn-primary" onclick="saveMetadata()">Save</button>
         </div>
-        <div class="mb-3">
-          <label for="editContactOrg" class="form-label">Contact Organization</label>
-          <input type="text" class="form-control" id="editContactOrg" value="ASSAC">
-        </div>
-        <div class="mb-3">
-          <label for="editContactEmail" class="form-label">Contact Email</label>
-          <input type="email" class="form-control" id="editContactEmail">
-        </div>
-        <div class="mb-3">
-          <label for="editContactPhone" class="form-label">Contact Phone</label>
-          <input type="text" class="form-control" id="editContactPhone">
-        </div>
-
-        <!-- Spatial Info -->
-     <label for="editGeometryType" class="form-label">Geometry Type</label>
-      <select class="form-control" id="editGeometryType">
-        <option value="">Select Geometry</option>
-        <option value="Point">Point</option>
-        <option value="MultiPoint">MultiPoint</option>
-        <option value="LineString">LineString</option>
-        <option value="MultiLineString">MultiLineString</option>
-        <option value="Polygon">Polygon</option>
-        <option value="MultiPolygon">MultiPolygon</option>
-      </select>
-
-        <div class="mb-3">
-          <label for="editSRID" class="form-label">SRID</label>
-          <input type="number" class="form-control" id="editSRID" value="4326">
-        </div>
-        <div class="mb-3">
-          <label for="editScale" class="form-label">Scale Denominator</label>
-          <input type="text" class="form-control" id="editScale">
-        </div>
-
-        <!-- Accuracy & Lineage -->
-        <div class="mb-3">
-          <label for="editPosAccuracy" class="form-label">Positional Accuracy</label>
-          <input type="text" class="form-control" id="editPosAccuracy">
-        </div>
-        <div class="mb-3">
-          <label for="editAttrAccuracy" class="form-label">Attribute Accuracy</label>
-          <input type="text" class="form-control" id="editAttrAccuracy">
-        </div>
-        <div class="mb-3">
-          <label for="editLineage" class="form-label">Lineage</label>
-          <textarea class="form-control" id="editLineage" rows="2"></textarea>
-        </div>
-
-        <!-- Citation Info -->
-        <div class="mb-3">
-          <label for="editCitationTitle" class="form-label">Citation Title</label>
-          <input type="text" class="form-control" id="editCitationTitle">
-        </div>
-        <div class="mb-3">
-          <label for="editCitationDate" class="form-label">Citation Date <span class="text-danger">*</span></label>
-          <input type="date" class="form-control" id="editCitationDate" required>
-        </div>
-        <div class="mb-3">
-          <label for="editPublisher" class="form-label">Publisher</label>
-          <input type="text" class="form-control" id="editPublisher">
-        </div>
-      </div>
-
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" onclick="closePopup()">Cancel</button>
-        <button type="button" class="btn btn-primary" onclick="saveMetadata()">Save</button>
       </div>
     </div>
   </div>
-</div>
 
 
   <!-- View-Only Metadata Modal -->
-<!-- View-Only Metadata Modal -->
-<div class="modal fade" id="infoPopup" tabindex="-1" aria-labelledby="infoPopupLabel" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-scrollable">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="infoPopupLabel">Layer Metadata</h5>
-        <button type="button" class="btn-close" onclick="closeInfoPopup()" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <p><strong>Title:</strong> <span id="infoTitle"></span></p>
-        <p><strong>Description:</strong> <span id="infoDesc"></span></p>
-        <p><strong>Abstract:</strong> <span id="infoAbstract"></span></p>
-        <p><strong>Purpose:</strong> <span id="infoPurpose"></span></p>
-        <p><strong>Topic Category:</strong> <span id="infoTopicCategory"></span></p>
-        <p><strong>Contact Name:</strong> <span id="infoContactName"></span></p>
-        <p><strong>Contact Organization:</strong> <span id="infoContactOrg"></span></p>
-        <p><strong>Contact Email:</strong> <span id="infoContactEmail"></span></p>
-        <p><strong>Contact Phone:</strong> <span id="infoContactPhone"></span></p>
-        <p><strong>Geometry Type:</strong> <span id="infoGeometryType"></span></p>
-        <p><strong>SRID:</strong> <span id="infoSRID"></span></p>
-        <p><strong>Scale Denominator:</strong> <span id="infoScale"></span></p>
-        <p><strong>Positional Accuracy:</strong> <span id="infoPosAccuracy"></span></p>
-        <p><strong>Attribute Accuracy:</strong> <span id="infoAttrAccuracy"></span></p>
-        <p><strong>Lineage:</strong> <span id="infoLineage"></span></p>
-        <p><strong>Citation Title:</strong> <span id="infoCitationTitle"></span></p>
-        <p><strong>Citation Date:</strong> <span id="infoCitationDate"></span></p>
-        <p><strong>Publisher:</strong> <span id="infoPublisher"></span></p>
-        <p><strong>MetaData Date:</strong> <span id="infoMetaDataDate"></span></p>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" onclick="closeInfoPopup()">Close</button>
+  <!-- View-Only Metadata Modal -->
+  <div class="modal fade" id="infoPopup" tabindex="-1" aria-labelledby="infoPopupLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="infoPopupLabel">Layer Metadata</h5>
+          <button type="button" class="btn-close" onclick="closeInfoPopup()" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <p><strong>Title:</strong> <span id="infoTitle"></span></p>
+          <p><strong>Description:</strong> <span id="infoDesc"></span></p>
+          <p><strong>Abstract:</strong> <span id="infoAbstract"></span></p>
+          <p><strong>Purpose:</strong> <span id="infoPurpose"></span></p>
+          <p><strong>Topic Category:</strong> <span id="infoTopicCategory"></span></p>
+          <p><strong>Contact Name:</strong> <span id="infoContactName"></span></p>
+          <p><strong>Contact Organization:</strong> <span id="infoContactOrg"></span></p>
+          <p><strong>Contact Email:</strong> <span id="infoContactEmail"></span></p>
+          <p><strong>Contact Phone:</strong> <span id="infoContactPhone"></span></p>
+          <p><strong>Geometry Type:</strong> <span id="infoGeometryType"></span></p>
+          <p><strong>SRID:</strong> <span id="infoSRID"></span></p>
+          <p><strong>Scale Denominator:</strong> <span id="infoScale"></span></p>
+          <p><strong>Positional Accuracy:</strong> <span id="infoPosAccuracy"></span></p>
+          <p><strong>Attribute Accuracy:</strong> <span id="infoAttrAccuracy"></span></p>
+          <p><strong>Lineage:</strong> <span id="infoLineage"></span></p>
+          <p><strong>Citation Title:</strong> <span id="infoCitationTitle"></span></p>
+          <p><strong>Citation Date:</strong> <span id="infoCitationDate"></span></p>
+          <p><strong>Publisher:</strong> <span id="infoPublisher"></span></p>
+          <p><strong>MetaData Date:</strong> <span id="infoMetaDataDate"></span></p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeInfoPopup()">Close</button>
+        </div>
       </div>
     </div>
   </div>
-</div>
 
 
 
 
-<!-- Replace File Modal -->
-<div class="modal fade" id="replacePopup" tabindex="-1" aria-labelledby="replacePopupLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-    
-      <div class="modal-header">
-        <h5 class="modal-title" id="replacePopupLabel">Replace Layer Data</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" onclick="closeReplacePopup()"></button>
+  <!-- Replace File Modal -->
+  <div class="modal fade" id="replacePopup" tabindex="-1" aria-labelledby="replacePopupLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+
+        <div class="modal-header">
+          <h5 class="modal-title" id="replacePopupLabel">Replace Layer Data</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"
+            onclick="closeReplacePopup()"></button>
+        </div>
+
+        <div class="modal-body">
+          <form id="replaceForm">
+            <div class="mb-3">
+              <label for="replaceFile" class="form-label">Select .zip File</label>
+              <input type="file" class="form-control" id="replaceFile" name="file" required accept=".zip" />
+            </div>
+            <label for="filename" class="form-label">File Name</label>
+            <input type="text" class="form-control" id="filename" name="filename" readonly>
+          </form>
+        </div>
+
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary" form="replaceForm">Replace</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"
+            onclick="closeReplacePopup()">Cancel</button>
+        </div>
+
       </div>
-
-      <div class="modal-body">
-        <form id="replaceForm">
-          <div class="mb-3">
-            <label for="replaceFile" class="form-label">Select .zip File</label>
-            <input type="file" class="form-control" id="replaceFile" name="file" required accept=".zip" />
-          </div>
-              <label for="filename" class="form-label">File Name</label>
-              <input type="text" class="form-control" id="filename" name="filename"  readonly>
-        </form>
-      </div>
-
-      <div class="modal-footer">
-        <button type="submit" class="btn btn-primary" form="replaceForm">Replace</button>
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" onclick="closeReplacePopup()">Cancel</button>
-      </div>
-
     </div>
   </div>
-</div>
- <!-- loader -->
-    <div id="loader0"
-      style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background-color:rgba(0,0,0,0.2); z-index:1000;">
-      <div
-        style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">
-        <button class="btn btn-primary" type="button" disabled>
-          <span class="spinner-grow spinner-grow-sm" role="status"
-            aria-hidden="true"></span>
-          Processing...
-        </button>
-      </div>
+  <!-- loader -->
+  <div id="loader0"
+    style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background-color:rgba(0,0,0,0.2); z-index:1000;">
+    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">
+      <button class="btn btn-primary" type="button" disabled>
+        <span class="spinner-grow spinner-grow-sm" role="status" aria-hidden="true"></span>
+        Processing...
+      </button>
     </div>
+  </div>
 
 
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+    crossorigin="anonymous"></script>
   <script>
 
 
-  //check is admin--
+    //check is admin--
     function parseJwt(token) {
       try {
         return JSON.parse(atob(token.split('.')[1]));
@@ -264,7 +271,7 @@
     const department = params.get('name');
     document.getElementById('deptTitle').textContent = `Department: ${department}`;
 
-   //load all layers
+    //load all layers
     async function loadLayers() {
       try {
         const res = await fetch(`/api/${department}`, {
@@ -283,8 +290,7 @@
             <div>
               <button class="btn btn-sm btn-outline-info btn-icon" onclick="openInfoPopup('${layer.layer_name}')">🛈</button>
               <button class="btn btn-sm btn-outline-success btn-icon" onclick="openWMS('${department}', '${layer.layer_name}')">🗺️ WMS</button>
-<button class="btn btn-sm btn-outline-dark btn-icon" onclick="openWFS('${department}', '${layer.layer_name}')">📄 WFS</button>
-<button class="btn btn-sm btn-outline-dark btn-icon" onclick="openKML('${department}', '${layer.layer_name}')">📄 KML</button>
+              <button class="btn btn-sm btn-outline-dark btn-icon" onclick="openKML('${department}', '${layer.layer_name}')">📄 KML</button>
 
               ${isAdmin ? `
                 <button class="btn btn-sm btn-outline-primary btn-icon" onclick="openEditPopup('${layer.layer_name}')">✏️</button>
@@ -312,136 +318,139 @@
 
     let selectedLayer = null;
 
-    
- 
+
+// load data to the edit form
     function openEditPopup(layer) {
-  selectedLayer = layer;
-  fetch(`/api/${department}/${layer}/metainfo`, {
-    headers: {
-      Authorization: 'Bearer ' + localStorage.getItem('token')
+      selectedLayer = layer;
+      fetch(`/api/${department}/${layer}/metainfo`, {
+        headers: {
+          Authorization: 'Bearer ' + localStorage.getItem('token')
+        }
+      })
+        .then(res => res.json())
+        .then(data => {
+          document.getElementById('editTitle').value = data.title || '';
+          document.getElementById('editDesc').value = data.description || '';
+          document.getElementById('editAbstract').value = data.abstract || '';
+          document.getElementById('editPurpose').value = data.purpose || '';
+          document.getElementById('editTopicCategory').value = data.topic_category || '';
+          document.getElementById('editContactName').value = data.contact_name || '';
+          document.getElementById('editContactOrg').value = data.contact_organization || 'ASSAC';
+          document.getElementById('editContactEmail').value = data.contact_email || '';
+          document.getElementById('editContactPhone').value = data.contact_phone || '';
+          document.getElementById('editGeometryType').value = data.geometry_type || '';
+          document.getElementById('editSRID').value = data.srid || '';
+          document.getElementById('editScale').value = data.scale_denominator || '';
+          document.getElementById('editPosAccuracy').value = data.positional_accuracy || '';
+          document.getElementById('editAttrAccuracy').value = data.attribute_accuracy || '';
+          document.getElementById('editLineage').value = data.lineage || '';
+          document.getElementById('editCitationTitle').value = data.citation_title || '';
+          document.getElementById('editCitationDate').value = data.citation_date ? new Date(data.citation_date).toISOString().split('T')[0] : '';
+
+          document.getElementById('editPublisher').value = data.publisher || '';
+
+          new bootstrap.Modal(document.getElementById('editPopup')).show();
+        })
+        .catch(err => {
+          console.error(err);
+          alert('Failed to load metadata');
+        });
     }
-  })
-  .then(res => res.json())
-  .then(data => {
-    document.getElementById('editTitle').value = data.title || '';
-    document.getElementById('editDesc').value = data.description || '';
-    document.getElementById('editAbstract').value = data.abstract || '';
-    document.getElementById('editPurpose').value = data.purpose || '';
-    document.getElementById('editTopicCategory').value = data.topic_category || '';
-    document.getElementById('editContactName').value = data.contact_name || '';
-    document.getElementById('editContactOrg').value = data.contact_organization || 'ASSAC';
-    document.getElementById('editContactEmail').value = data.contact_email || '';
-    document.getElementById('editContactPhone').value = data.contact_phone || '';
-    document.getElementById('editGeometryType').value = data.geometry_type || '';
-    document.getElementById('editSRID').value = data.srid || '';
-    document.getElementById('editScale').value = data.scale_denominator || '';
-    document.getElementById('editPosAccuracy').value = data.positional_accuracy || '';
-    document.getElementById('editAttrAccuracy').value = data.attribute_accuracy || '';
-    document.getElementById('editLineage').value = data.lineage || '';
-    document.getElementById('editCitationTitle').value = data.citation_title || '';
-    document.getElementById('editCitationDate').value = data.citation_date? new Date(data.citation_date).toISOString().split('T')[0]: '';
 
-    document.getElementById('editPublisher').value = data.publisher || '';
-
-    new bootstrap.Modal(document.getElementById('editPopup')).show();
-  })
-  .catch(err => {
-    console.error(err);
-    alert('Failed to load metadata');
-  });
-}
-
+// save meta data
     function saveMetadata() {
-      if(document.getElementById('editCitationDate').value ===''){
+      if (document.getElementById('editCitationDate').value === '') {
         alert("Citation Date Can't be empty");
         return;
       }
-  const payload = {
-    title: document.getElementById('editTitle').value,
-    description: document.getElementById('editDesc').value,
-    abstract: document.getElementById('editAbstract').value,
-    purpose: document.getElementById('editPurpose').value,
-    topic_category: document.getElementById('editTopicCategory').value,
-    contact_name: document.getElementById('editContactName').value,
-    contact_organization: document.getElementById('editContactOrg').value,
-    contact_email: document.getElementById('editContactEmail').value,
-    contact_phone: document.getElementById('editContactPhone').value,
-    geometry_type: document.getElementById('editGeometryType').value,
-    srid: parseInt(document.getElementById('editSRID').value),
-    scale_denominator: document.getElementById('editScale').value,
-    positional_accuracy: document.getElementById('editPosAccuracy').value,
-    attribute_accuracy: document.getElementById('editAttrAccuracy').value,
-    lineage: document.getElementById('editLineage').value,
-    citation_title: document.getElementById('editCitationTitle').value,
-    citation_date: document.getElementById('editCitationDate').value,
-    publisher: document.getElementById('editPublisher').value
-  };
+      const payload = {
+        title: document.getElementById('editTitle').value,
+        description: document.getElementById('editDesc').value,
+        abstract: document.getElementById('editAbstract').value,
+        purpose: document.getElementById('editPurpose').value,
+        topic_category: document.getElementById('editTopicCategory').value,
+        contact_name: document.getElementById('editContactName').value,
+        contact_organization: document.getElementById('editContactOrg').value,
+        contact_email: document.getElementById('editContactEmail').value,
+        contact_phone: document.getElementById('editContactPhone').value,
+        geometry_type: document.getElementById('editGeometryType').value,
+        srid: parseInt(document.getElementById('editSRID').value),
+        scale_denominator: document.getElementById('editScale').value,
+        positional_accuracy: document.getElementById('editPosAccuracy').value,
+        attribute_accuracy: document.getElementById('editAttrAccuracy').value,
+        lineage: document.getElementById('editLineage').value,
+        citation_title: document.getElementById('editCitationTitle').value,
+        citation_date: document.getElementById('editCitationDate').value,
+        publisher: document.getElementById('editPublisher').value
+      };
 
-  fetch(`/api/${department}/${selectedLayer}/metainfo`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: 'Bearer ' + localStorage.getItem('token')
-    },
-    body: JSON.stringify(payload)
-  })
-    .then(res => res.json())
-    .then(data => {
-      alert('Metadata updated');
-      closePopup();
-      loadLayers(); // Refresh list
-    })
-    .catch(err => {
-      console.error(err);
-      alert('Failed to update metadata');
-    });
-}
+      fetch(`/api/${department}/${selectedLayer}/metainfo`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: 'Bearer ' + localStorage.getItem('token')
+        },
+        body: JSON.stringify(payload)
+      })
+        .then(res => res.json())
+        .then(data => {
+          alert('Metadata updated');
+          closePopup();
+          loadLayers(); // Refresh list
+        })
+        .catch(err => {
+          console.error(err);
+          alert('Failed to update metadata');
+        });
+    }
 
-
+// close edit popup
     function closePopup() {
       bootstrap.Modal.getInstance(document.getElementById('editPopup')).hide();
     }
 
-function openInfoPopup(layer) {
-  fetch(`/api/${department}/${layer}/metainfo`, {
-    headers: {
-      Authorization: 'Bearer ' + localStorage.getItem('token')
+// open meta info popup
+    function openInfoPopup(layer) {
+      fetch(`/api/${department}/${layer}/metainfo`, {
+        headers: {
+          Authorization: 'Bearer ' + localStorage.getItem('token')
+        }
+      })
+        .then(res => res.json())
+        .then(data => {
+          document.getElementById('infoTitle').textContent = data.title || 'N/A';
+          document.getElementById('infoDesc').textContent = data.description || 'N/A';
+          document.getElementById('infoAbstract').textContent = data.abstract || 'N/A';
+          document.getElementById('infoPurpose').textContent = data.purpose || 'N/A';
+          document.getElementById('infoTopicCategory').textContent = data.topic_category || 'N/A';
+          document.getElementById('infoContactName').textContent = data.contact_name || 'N/A';
+          document.getElementById('infoContactOrg').textContent = data.contact_organization || 'ASSAC';
+          document.getElementById('infoContactEmail').textContent = data.contact_email || 'N/A';
+          document.getElementById('infoContactPhone').textContent = data.contact_phone || 'N/A';
+          document.getElementById('infoGeometryType').textContent = data.geometry_type || 'N/A';
+          document.getElementById('infoSRID').textContent = data.srid || 'N/A';
+          document.getElementById('infoScale').textContent = data.scale_denominator || 'N/A';
+          document.getElementById('infoPosAccuracy').textContent = data.positional_accuracy || 'N/A';
+          document.getElementById('infoAttrAccuracy').textContent = data.attribute_accuracy || 'N/A';
+          document.getElementById('infoLineage').textContent = data.lineage || 'N/A';
+          document.getElementById('infoCitationTitle').textContent = data.citation_title || 'N/A';
+          document.getElementById('infoCitationDate').textContent = data.citation_date ? new Date(data.citation_date).toLocaleDateString('en-GB') : 'N/A';
+          document.getElementById('infoPublisher').textContent = data.publisher || 'N/A';
+          document.getElementById('infoMetaDataDate').textContent = data.metadata_date ? new Date(data.metadata_date).toLocaleDateString('en-GB') : 'N/A';
+          new bootstrap.Modal(document.getElementById('infoPopup')).show();
+        })
+        .catch(err => {
+          console.error(err);
+          alert('Failed to load metadata');
+        });
     }
-  })
-  .then(res => res.json())
-  .then(data => {
-    document.getElementById('infoTitle').textContent = data.title || 'N/A';
-    document.getElementById('infoDesc').textContent = data.description || 'N/A';
-    document.getElementById('infoAbstract').textContent = data.abstract || 'N/A';
-    document.getElementById('infoPurpose').textContent = data.purpose || 'N/A';
-    document.getElementById('infoTopicCategory').textContent = data.topic_category || 'N/A';
-    document.getElementById('infoContactName').textContent = data.contact_name || 'N/A';
-    document.getElementById('infoContactOrg').textContent = data.contact_organization || 'ASSAC';
-    document.getElementById('infoContactEmail').textContent = data.contact_email || 'N/A';
-    document.getElementById('infoContactPhone').textContent = data.contact_phone || 'N/A';
-    document.getElementById('infoGeometryType').textContent = data.geometry_type || 'N/A';
-    document.getElementById('infoSRID').textContent = data.srid || 'N/A';
-    document.getElementById('infoScale').textContent = data.scale_denominator || 'N/A';
-    document.getElementById('infoPosAccuracy').textContent = data.positional_accuracy || 'N/A';
-    document.getElementById('infoAttrAccuracy').textContent = data.attribute_accuracy || 'N/A';
-    document.getElementById('infoLineage').textContent = data.lineage || 'N/A';
-    document.getElementById('infoCitationTitle').textContent = data.citation_title || 'N/A';
-    document.getElementById('infoCitationDate').textContent = data.citation_date ? new Date(data.citation_date).toLocaleDateString('en-GB') : 'N/A';
-    document.getElementById('infoPublisher').textContent = data.publisher || 'N/A';
-    document.getElementById('infoMetaDataDate').textContent = data.metadata_date ? new Date(data.metadata_date).toLocaleDateString('en-GB') : 'N/A';
-    new bootstrap.Modal(document.getElementById('infoPopup')).show();
-  })
-  .catch(err => {
-    console.error(err);
-    alert('Failed to load metadata');
-  });
-}
 
-
+// close meta info popup
     function closeInfoPopup() {
       bootstrap.Modal.getInstance(document.getElementById('infoPopup')).hide();
     }
 
+// open raw geojson
     function openRawGeoJSON(layer) {
       const token = localStorage.getItem('token');
       const url = `/api/${department}/${layer}`;
@@ -452,124 +461,126 @@ function openInfoPopup(layer) {
           Authorization: 'Bearer ' + token
         }
       })
-      .then(res => res.json())
-      .then(data => {
-        win.document.write('<pre>' + JSON.stringify(data, null, 2) + '</pre>');
-        win.document.close();
+        .then(res => res.json())
+        .then(data => {
+          win.document.write('<pre>' + JSON.stringify(data, null, 2) + '</pre>');
+          win.document.close();
+        })
+        .catch(() => {
+          win.document.write('<p>Failed to load GeoJSON</p>');
+          win.document.close();
+        });
+    }
+
+    // replace existing shapefile
+    async function openReplacePopup(layer) {
+      console.log(layer)
+      new bootstrap.Modal(document.getElementById('replacePopup')).show();
+      document.getElementById("filename").value = layer;
+
+    }
+    loadLayers();
+
+    // --hide replace popup--
+    function closeReplacePopup() {
+      document.getElementById('replacePopup').style.display = 'none';
+    }
+    //-- replace --
+    document.getElementById('replaceForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const formData = new FormData(e.target);
+
+      const confirm = await Swal.fire({
+        title: 'Are you sure?',
+        text: 'This will overwrite existing geometry.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, Replace it!'
+      });
+
+      if (!confirm.isConfirmed) return;
+      document.getElementById('loader0').style.display = 'block';
+      fetch('/replace', {
+        headers: { Authorization: 'Bearer ' + token },
+        method: 'POST',
+        body: formData
       })
-      .catch(() => {
-        win.document.write('<p>Failed to load GeoJSON</p>');
-        win.document.close();
-      });
-    }
+        .then(res => res.json())
+        .then(data => {
+          document.getElementById('loader0').style.display = 'none'
 
-        async function openReplacePopup(layer) {
-          console.log(layer)
-             new bootstrap.Modal(document.getElementById('replacePopup')).show();
-            document.getElementById("filename").value = layer;
-
-    }
-  loadLayers();
-  // --hide replace popup--
-  function closeReplacePopup() {
-  document.getElementById('replacePopup').style.display = 'none';
-}
-//-- replace --
-document.getElementById('replaceForm').addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const formData = new FormData(e.target);
-
-  const confirm = await Swal.fire({
-    title: 'Are you sure?',
-    text: 'This will overwrite existing geometry.',
-    icon: 'warning',
-    showCancelButton: true,
-    confirmButtonText: 'Yes, Replace it!'
-  });
-
-  if (!confirm.isConfirmed) return;
-    document.getElementById('loader0').style.display = 'block';
-  fetch('/replace', {
-    headers: { Authorization: 'Bearer ' + token },
-    method: 'POST',
-    body: formData
-  })
-    .then(res => res.json())
-    .then(data => {
-      document.getElementById('loader0').style.display = 'none'
-
-      Swal.fire(data.title || 'Success', data.message, data.icon || 'success');
-    })
-    .catch(err => {
-      document.getElementById('loader0').style.display = 'none'
-      console.error(err);
-      Swal.fire('Error', 'Could not replace layer.', 'error');
+          Swal.fire(data.title || 'Success', data.message, data.icon || 'success');
+        })
+        .catch(err => {
+          document.getElementById('loader0').style.display = 'none'
+          console.error(err);
+          Swal.fire('Error', 'Could not replace layer.', 'error');
+        });
     });
-});
-// Delete record
-async function confirmDeleteLayer(layerName) {
-  const confirm = await Swal.fire({
-    title: 'Delete Layer?',
-    text: `Are you sure you want to delete "${layerName}"? This will remove it from the map and the database.`,
-    icon: 'warning',
-    showCancelButton: true,
-    confirmButtonText: 'Yes, delete it!'
-  });
-
-  if (!confirm.isConfirmed) return;
-
-  fetch(`/delete/${department}/${layerName}`, {
-    method: 'POST'
-  })
-    .then(res => res.json())
-    .then(data => {
-      Swal.fire('Deleted', data.message, 'success');
-      // Optional: remove the element from DOM
-      document.getElementById(`layer-${layerName}`)?.remove();
-    })
-    .catch(err => {
-      console.error(err);
-      Swal.fire('Error', 'Could not delete layer.', 'error');
-    });
-}
-// geoserver
-function openWMS(dept, layer) {
-  const workspace = 'gatishakti'; // Or map dept to workspace
-  window.open(`/viewer/${dept}/${layer}?workspace=${workspace}&layer=${layer}`, '_blank');
-}
-
-
-function openWFS(dept, layer) {
-  window.open(`/preview/${dept}/${layer}/wfs`, '_blank');
-}
-
-function openKML(dept, layer){
-   window.open(`/api/${dept}/${layer}/kml`);
-}
-
-// logout
-document.getElementById("logoutBtn").addEventListener('click', () => {
-  fetch('/logout')
-  localStorage.removeItem('token');
-  window.location.href = 'login.html';
-  })
-
-document.addEventListener('DOMContentLoaded', () => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      window.location.href = '/login.html';
-    } else {
-      // Optionally verify token with server
-      fetch('/verify-token', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      }).then(res => {
-        if (!res.ok) {
-          window.location.href = '/login.html';
-        }
+    
+    // Delete record
+    async function confirmDeleteLayer(layerName) {
+      const confirm = await Swal.fire({
+        title: 'Delete Layer?',
+        text: `Are you sure you want to delete "${layerName}"? This will remove it from the map and the database.`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, delete it!'
       });
+
+      if (!confirm.isConfirmed) return;
+
+      fetch(`/delete/${department}/${layerName}`, {
+        method: 'POST'
+      })
+        .then(res => res.json())
+        .then(data => {
+          Swal.fire('Deleted', data.message, 'success');
+          // Optional: remove the element from DOM
+          document.getElementById(`layer-${layerName}`)?.remove();
+        })
+        .catch(err => {
+          console.error(err);
+          Swal.fire('Error', 'Could not delete layer.', 'error');
+        });
     }
-  });    
+   
+    // geoserver wms
+    function openWMS(dept, layer) {
+      const workspace = 'gatishakti'; // Or map dept to workspace
+      window.open(`/viewer/${dept}/${layer}?workspace=${workspace}&layer=${layer}`, '_blank');
+    }
+
+
+    // download kml
+    function openKML(dept, layer) {
+      window.open(`/api/${dept}/${layer}/kml`);
+    }
+
+    // logout
+    document.getElementById("logoutBtn").addEventListener('click', () => {
+      fetch('/logout')
+      localStorage.removeItem('token');
+      window.location.href = 'login.html';
+    })
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        window.location.href = '/login.html';
+      } else {
+        // Optionally verify token with server
+        fetch('/verify-token', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        }).then(res => {
+          if (!res.ok) {
+            window.location.href = '/login.html';
+          }
+        });
+      }
+    });
 
   </script>
 </body>
+
 </html>

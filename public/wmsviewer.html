@@ -35,8 +35,7 @@
 
       <!-- Layer Info -->
       <div class="col-12 col-md-auto text-center mb-3 mb-md-0">
-        <div class="d-inline-block bg-light text-dark px-3 py-2 rounded">
-          <strong>Layer Name:</strong> Land Use Map
+        <div class="d-inline-block bg-light text-dark px-3 py-2 rounded" id="lname">
         </div>
       </div>
 
@@ -66,8 +65,10 @@
     const params = new URLSearchParams(window.location.search);
     const workspace = params.get('workspace');
     const layer = params.get('layer');
+    document.getElementById("lname").innerHTML=`<strong>Layer Name:</strong> ${layer}`
     const token = localStorage.getItem('token');
 
+    // district boundary layer
     const boundaryWmsSource = new TileWMS({
       url: `/wms?workspace=${workspace}`,
       params: { 'LAYERS': `${workspace}:assam`, 'TILED': true },
@@ -82,8 +83,10 @@
           });
       }
     });
+
     const boundaryWmsLayer = new TileLayer({ source: boundaryWmsSource });
 
+    // district data layer
     const wmsSource = new TileWMS({
       url: `/wms?workspace=${workspace}`,
       params: { 'LAYERS': `${workspace}:${layer}`, 'TILED': true },
