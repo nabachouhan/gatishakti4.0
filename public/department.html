@@ -26,9 +26,15 @@
 </header>
 
 <div class="container">
-  <div class="d-flex justify-content-end mb-3">
+   <div class="d-flex justify-content-between mb-3">
+
+  <div class="">
+    <button id="logoutBtn" class="btn btn-secondary" onclick="history.back()">Back</button>
+  </div>
+  <div class="">
     <button id="logoutBtn" class="btn btn-danger">Logout</button>
   </div>
+</div>
 
   <div class="card shadow-sm">
     <div class="card-body">
@@ -278,6 +284,7 @@
               <button class="btn btn-sm btn-outline-info btn-icon" onclick="openInfoPopup('${layer.layer_name}')">🛈</button>
               <button class="btn btn-sm btn-outline-success btn-icon" onclick="openWMS('${department}', '${layer.layer_name}')">🗺️ WMS</button>
 <button class="btn btn-sm btn-outline-dark btn-icon" onclick="openWFS('${department}', '${layer.layer_name}')">📄 WFS</button>
+<button class="btn btn-sm btn-outline-dark btn-icon" onclick="openKML('${department}', '${layer.layer_name}')">📄 KML</button>
 
               ${isAdmin ? `
                 <button class="btn btn-sm btn-outline-primary btn-icon" onclick="openEditPopup('${layer.layer_name}')">✏️</button>
@@ -536,13 +543,15 @@ function openWFS(dept, layer) {
   window.open(`/preview/${dept}/${layer}/wfs`, '_blank');
 }
 
-window.open(`/preview/${dept}/${layer}/wms`, '_blank');
-window.open(`/preview/${dept}/${layer}/wfs`, '_blank');
+function openKML(dept, layer){
+   window.open(`/api/${dept}/${layer}/kml`);
+}
 
 // logout
 document.getElementById("logoutBtn").addEventListener('click', () => {
-    localStorage.removeItem('token');
-    window.location.href = 'login.html';
+  fetch('/logout')
+  localStorage.removeItem('token');
+  window.location.href = 'login.html';
   })
 
 document.addEventListener('DOMContentLoaded', () => {

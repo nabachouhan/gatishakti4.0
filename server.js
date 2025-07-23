@@ -110,9 +110,18 @@ app.post('/', async(req, res) => {
 app.get('/api', authenticateJWT, async (req, res) => {
   
 try {
-  const result = await pooluser.query('SELECT DISTINCT department FROM layer_metadata');
+const result = await pooluser.query(`
+  SELECT department, COUNT(*) AS layer_count
+  FROM layer_metadata
+  GROUP BY department
+  ORDER BY department ASC
+`);
+console.log(result.rows);
     // console.log(result.rows);
-    res.status(200).json(result.rows.map(r => r.department));
+res.status(200).json(result.rows.map(r => ({
+  department: r.department,
+  count: Number(r.layer_count)
+})));
 } catch (error) {
       res.status(500).json({"message":"server Error"})
 }  
@@ -122,7 +131,6 @@ try {
 app.get('/api/:department', authenticateJWT, async (req, res) => {
   const { department } = req.params;
   // console.log(req.params);
-  // console.log(`SELECT layer_name FROM layer_metadata WHERE department = ${department};`)
   try {
     const result = await pooluser.query(
       'SELECT layer_name FROM layer_metadata WHERE department = $1',
@@ -138,10 +146,6 @@ app.get('/api/:department', authenticateJWT, async (req, res) => {
 app.get('/api/:department/:layer', authenticateJWT, async (req, res) => {
   const { department, layer } = req.params;
   try {
-    // const result = await pool.query(`
-    //   SELECT *, ST_AsGeoJSON(geom)::json AS geometry 
-    //   FROM "${layer}"
-    // `);
 
     // Check if 'geom' column exists in the table
 const geomCheck = await pool.query(`
@@ -250,6 +254,10 @@ const srid = 4326;
 
     const client = await pooluser.connect();
 
+    // Unzip
+    const zipPath = req.file.path;
+
+    const unzipPath = path.join('uploads', filename);
   try {
     // Check if layer already exists
     const check = await client.query(`SELECT 1 FROM layer_metadata WHERE layer_name = $1`, [filename]);
@@ -269,22 +277,24 @@ const srid = 4326;
         const shapefilePath = tmpshppath.replace(".zip", ".shp");
         // -------------
 
-    // Unzip
-    const zipPath = req.file.path;
-
-    const unzipPath = path.join('uploads', filename);
 
     new AdmZip(zipPath).extractAllTo(unzipPath, true);
 
     // Find .shp file
     const shpFile = fs.readdirSync(unzipPath).find(f => f.endsWith('.shp'));
+    const shxFile = fs.readdirSync(unzipPath).find(f => f.endsWith('.shx'));
+    const dbfFile = fs.readdirSync(unzipPath).find(f => f.endsWith('.dbf'));
     if (!shpFile) throw new Error('No .shp file found in zip');
+    if (!shxFile) throw new Error('No .shx file found in zip');
+    if (!dbfFile) throw new Error('No .dbf file found in zip');
 
     const shpPath = path.join(unzipPath, shpFile);
     const cmd = `shp2pgsql -I -s ${srid} "${shpPath}" ${filename} | psql -U ${process.env.db_user} -d ${process.env.db_name}`;
 
     // Upload to DB
     exec(cmd, { env: { ...process.env, PGPASSWORD: process.env.db_pw } }, async (err, stdout, stderr) => {
+      cleanUp(zipPath, unzipPath);
+
       if (err) {
         console.error(stderr);
         return res.status(500).json({ message: 'Error uploading shapefile' });
@@ -304,8 +314,9 @@ const srid = 4326;
       res.status(201).json({ message: 'Shapefile uploaded successfully' });
     });
   } catch (err) {
+    cleanUp(zipPath, unzipPath);
     console.error(err);
-    res.status(500).json({ message: 'Upload failed' });
+    res.status(500).json({ title: "Failed", message: err.message });
   } finally {
     client.release();
   }
@@ -319,8 +330,9 @@ app.post('/replace', authenticateJWT, upload.single('file'), async (req, res) =>
   // console.log(req.body);
   
   const srid = 4326;
-
-  const client = await pooluser.connect();
+    const zipPath = req.file.path;
+    const unzipPath = path.join('uploads', filename + '_replace');
+    const client = await pooluser.connect();
   try {
     const check = await client.query(`SELECT 1 FROM layer_metadata WHERE layer_name = $1`, [filename]);
     if (check.rowCount === 0) {
@@ -328,15 +340,18 @@ app.post('/replace', authenticateJWT, upload.single('file'), async (req, res) =>
     }
 
     // Extract uploaded zip
-    const zipPath = req.file.path;
+    
     console.log(zipPath);
     
-    const unzipPath = path.join('uploads', filename + '_replace');
     new AdmZip(zipPath).extractAllTo(unzipPath, true);
     console.log(unzipPath);
 
-    const shpFile = fs.readdirSync(unzipPath).find(f => f.endsWith('.shp'));
-    if (!shpFile) throw new Error('No .shp file found');
+     const shpFile = fs.readdirSync(unzipPath).find(f => f.endsWith('.shp'));
+    const shxFile = fs.readdirSync(unzipPath).find(f => f.endsWith('.shx'));
+    const dbfFile = fs.readdirSync(unzipPath).find(f => f.endsWith('.dbf'));
+    if (!shpFile) throw new Error('No .shp file found in zip');
+    if (!shxFile) throw new Error('No .shx file found in zip');
+    if (!dbfFile) throw new Error('No .dbf file found in zip');
 
     const shpPath = path.join(unzipPath, shpFile);
     console.log(shpPath);
@@ -369,9 +384,10 @@ exec(dropCmd, { env: { ...process.env, PGPASSWORD: process.env.db_pw } }, (dropE
 });
 
 
-  } catch (e) {
-    console.error(e);
-    res.status(500).json({ message: 'Replace failed' });
+  } catch (err) {
+    console.error(err);
+    cleanUp(zipPath, unzipPath)
+    res.status(500).json({ title: "Failed",message: err.message, icon:'Danger' });
   } finally {
     client.release();
   }
@@ -417,7 +433,7 @@ app.post('/delete/:department/:layer', async (req, res) => {
     res.status(200).json({ message: `Layer "${layer}" deleted successfully.` });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: 'Deletion failed' });
+    res.status(500).json({ title: 'Failed', message: err.message  });
   } finally {
     client.release();
     dataclient.release();
@@ -442,6 +458,30 @@ app.get('/api/:department/:layer/wfs', authenticateJWT, async (req, res) => {
     const data = await geores.json();
     res.setHeader('Content-Type', 'application/json');
     res.status(200).json(data);
+  } catch (error) {
+    console.error('WFS proxy error:', error);
+    res.status(500).json({ error: 'Failed to fetch WFS data from GeoServer' });
+  }
+});
+
+// kml
+app.get('/api/:department/:layer/kml', authenticateJWTFromCookie, async (req, res) => {
+  const { department, layer } = req.params;
+
+  const geoserverURL = process.env.geoserverURL;
+  const workspace = 'gatishakti'; // 🔁 optionally map department to workspace
+
+  const wfsURL = `${geoserverURL}/${workspace}/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=${workspace}:${layer}&outputFormat=kml`;
+
+  try {
+    const geores = await fetch(wfsURL, {
+  headers: {
+    Authorization: 'Basic ' + Buffer.from('admin:geoserver').toString('base64')
+  }});
+     const kmlData = await geores.text(); // KML is XML-based
+      res.setHeader("Content-Type", "application/vnd.google-earth.kml+xml");
+      res.setHeader("Content-Disposition", "attachment; filename=layer-data.kml");
+      res.status(200).send(kmlData);
   } catch (error) {
     console.error('WFS proxy error:', error);
     res.status(500).json({ error: 'Failed to fetch WFS data from GeoServer' });
@@ -500,8 +540,16 @@ app.get('/verify-token', (req, res) => {
   });
 });
 
+app.get('/logout', (req, res) => {
+  res.clearCookie('token'); // Match name & options (path/domain)
+  res.status(200).json({ message: 'Logged out' });
+});
+
 
 app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'login.html'));
+});
+app.get('/login.html', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'login.html'));
 });
 

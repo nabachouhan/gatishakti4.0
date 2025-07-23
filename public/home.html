@@ -26,10 +26,15 @@
 </header>
 
 <div class="container">
-  <div class="d-flex justify-content-end mb-3">
+  <div class="d-flex justify-content-between mb-3">
+
+  <div class="">
+    <button class="btn btn-secondary" onclick="history.back()">Back</button>
+  </div>
+  <div class="">
     <button id="logoutBtn" class="btn btn-danger">Logout</button>
   </div>
-
+</div>
   <div class="row">
     <!-- Department list (left side) -->
     <div class="col-md-8">
@@ -168,8 +173,8 @@
           const li = document.createElement('li');
           li.className = 'list-group-item department-card';
           const a = document.createElement('a');
-          a.href = `/department.html?name=${encodeURIComponent(dep)}`;
-          a.textContent = dep;
+          a.href = `/department.html?name=${encodeURIComponent(dep.department)}`;
+          a.textContent = `${dep.department} [${dep.count}]`;
           a.className = 'text-primary text-decoration-none';
           li.appendChild(a);
           ul.appendChild(li);
@@ -263,8 +268,9 @@ document.getElementById('adminUploadForm').addEventListener('submit', async(even
     // logout
     // logout
 document.getElementById("logoutBtn").addEventListener('click', () => {
-    localStorage.removeItem('token');
-    window.location.href = 'login.html';
+  fetch('/logout')
+  localStorage.removeItem('token');
+  window.location.href = 'login.html';
   })
 
 document.addEventListener('DOMContentLoaded', () => {
