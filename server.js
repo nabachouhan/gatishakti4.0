@@ -73,6 +73,44 @@ function authenticateJWTFromCookie(req, res, next) {
   });
 }
 
+// 🟢 JWT Middleware using either Cookie or token
+function authenticateJWTEither(req, res, next) {
+  const headerToken = req.headers['authorization']?.split(' ')[1];
+  const cookieToken = req.cookies?.token;
+
+  // Try header token first
+  if (headerToken) {
+    jwt.verify(headerToken, process.env.JWT_SECRET, (err, user) => {
+      if (!err) {
+        req.user = user;
+        return next(); // ✅ Header token valid
+      }
+
+      // If header token fails, try cookie token
+      if (cookieToken) {
+        jwt.verify(cookieToken, process.env.JWT_SECRET, (cookieErr, cookieUser) => {
+          if (!cookieErr) {
+            req.user = cookieUser;
+            return next(); // ✅ Cookie token valid
+          }
+          return res.sendStatus(403); // ❌ Both invalid
+        });
+      } else {
+        return res.sendStatus(403); // ❌ Header failed & no cookie
+      }
+    });
+  } else if (cookieToken) {
+    // Try cookie token directly if no header token
+    jwt.verify(cookieToken, process.env.JWT_SECRET, (err, user) => {
+      if (err) return res.sendStatus(403); // ❌ Invalid
+      req.user = user;
+      next(); // ✅ Cookie token valid
+    });
+  } else {
+    return res.sendStatus(401); // ❌ No token at all
+  }
+}
+
 // 🔐 Login route
 app.post('/', async (req, res) => {
   const { username, password } = req.body;
@@ -462,7 +500,7 @@ app.get('/api/:department/:layer/wfs', authenticateJWT, async (req, res) => {
 });
 
 // kml
-app.get('/api/:department/:layer/kml', authenticateJWTFromCookie, async (req, res) => {
+app.get('/api/:department/:layer/kml', authenticateJWTEither, async (req, res) => {
   const { department, layer } = req.params;
 
   const geoserverURL = process.env.geoserverURL;
@@ -544,7 +582,7 @@ app.get('/logout', (req, res) => {
 
 
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'login.html'));
+  res.redirect('/login.html');
 });
 app.get('/login.html', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'login.html'));
